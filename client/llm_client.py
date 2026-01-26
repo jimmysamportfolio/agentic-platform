@@ -34,14 +34,52 @@ class LLMClient:
             "stream": stream
         }
         if stream:
-            await self._stream_response()
+            async for event in self._stream_response(client, kwargs):
+                yield event
         else:
             event = await self._non_stream_response(client, kwargs)
             yield event
         return 
 
-    async def _stream_response(self, client: AsyncOpenAI,):
-        pass
+    async def _stream_response(
+        self,
+        client: AsyncOpenAI,
+        kwargs: dict[str, Any]
+    ) -> AsyncGenerator[StreamEvent, None]:
+        response = await client.chat.completions.create(**kwargs)
+
+        usage: TokenUsage | None = None
+        finish_reason : str | None = None
+
+        async for chunk in response:
+            if hasattr(chunk, "usage") and chunk.usage:
+                usage = TokenUsage(
+                    prompt_tokens=chunk.usage.prompt_tokens,
+                    completion_tokens=chunk.usage.completion_tokens,
+                    total_tokens=chunk.usage.total_tokens,
+                    cached_tokens=chunk.usage.prompt_tokens_details.cached_tokens,
+                )
+
+            if not chunk.choices:
+                continue
+            
+            choice = chunk.choices[0]
+            delta = choice.delta
+
+            if choice.finish_reason:
+                finish_reason = choice.finish_reason
+
+            if delta.content:
+                yield StreamEvent(
+                    type=EventType.TEXT_DELTA,
+                    text_delta=TextDelta(delta.content),
+                )
+
+        yield StreamEvent(
+            type=EventType.MESSAGE_COMPLETE,
+            finish_reason=finish_reason,
+            usage=usage,
+        )
 
     async def _non_stream_response(
         self,
