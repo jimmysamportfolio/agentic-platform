@@ -1,7 +1,7 @@
-from typing import Any
+from typing import Any, AsyncGenerator
 from openai import AsyncOpenAI
 from config import config
-from client.response import TextDelta, StreamEvent, EventType
+from client.response import TextDelta, StreamEvent, EventType, TokenUsage
 
 class LLMClient:
 
@@ -25,7 +25,7 @@ class LLMClient:
         self, 
         messages: list[dict[str, Any]],
         stream: bool=True
-    ) -> AsyncGenerator:
+    ) -> AsyncGenerator[StreamEvent, None]:
         client = self.get_client()
 
         kwargs = {
@@ -37,7 +37,8 @@ class LLMClient:
             await self._stream_response()
         else:
             event = await self._non_stream_response(client, kwargs)
-            yield event    
+            yield event
+        return 
 
     async def _stream_response(self, client: AsyncOpenAI,):
         pass
@@ -61,7 +62,7 @@ class LLMClient:
                 prompt_tokens=response.usage.prompt_tokens,
                 completion_tokens=response.usage.completion_tokens,
                 total_tokens=response.usage.total_tokens,
-                cached_tokens=response.prompt_token_details.cached_tokens,
+                cached_tokens=response.usage.prompt_tokens_details.cached_tokens,
             )
 
         return StreamEvent(
