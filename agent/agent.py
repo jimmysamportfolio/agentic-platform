@@ -1,17 +1,20 @@
 from __future__ import annotations
 from agent.events import AgentEventType, AgentEvent
-from client.response import StreamEventType
-from client.llm_client import LLMClient
+from client import StreamEventType, LLMClient
 from typing import AsyncGenerator
+from context import ContextManager
 
 
 class Agent:
     def __init__(self):
         self.client = LLMClient()
+        self._context_manager = ContextManager()
 
     async def run(self, message: str):
         yield AgentEvent.agent_start(message)
-        # TODO add user message to context 
+
+        self._context_manager.add_user_message(message)
+
         final_response: str | None = None
         
         async for event in self._agentic_loop():
@@ -23,12 +26,9 @@ class Agent:
         yield AgentEvent.agent_end(final_response)
 
     async def _agentic_loop(self) -> AsyncGenerator[AgentEvent, None]:
-        
-        messages = [{'role': 'user','content': "Hey what is going on"}] # placeholder for now
-
         response_text = ""
         
-        async for event in self.client.chat_completion(messages, True):
+        async for event in self.client.chat_completion(self._context_manager.get_messages, True):
             if event.type == StreamEventType.TEXT_DELTA:
                 if event.text_delta:
                     content = event.text_delta.content
@@ -37,7 +37,9 @@ class Agent:
             elif event.type == StreamEventType.ERROR:
                 yield AgentEvent.agent_error(event.error or "Unknown error occured")
                 
-                
+        self._context_manager.add_assistant_message(
+            response_text or None,
+        )   
         if response_text:
             yield AgentEvent.text_complete(response_text)
 
