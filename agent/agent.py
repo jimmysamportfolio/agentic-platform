@@ -28,7 +28,7 @@ class Agent:
     async def _agentic_loop(self) -> AsyncGenerator[AgentEvent, None]:
         response_text = ""
         
-        async for event in self.client.chat_completion(self._context_manager.get_messages, True):
+        async for event in self.client.chat_completion(self._context_manager.get_messages(), True):
             if event.type == StreamEventType.TEXT_DELTA:
                 if event.text_delta:
                     content = event.text_delta.content
