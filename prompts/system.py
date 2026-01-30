@@ -3,8 +3,6 @@ def get_system_prompt() -> str:
 
     # Identity and role
     parts.append(_get_identity_section())
-    # Environment
-    parts.append(_get_environment_section(config))
 
     # AGENTS.md spec
     parts.append(_get_agents_md_section())
