@@ -1,10 +1,9 @@
 import sys
 from ui.tui import get_console
 from ui.tui import TUI
-from agent.agent import Agent
-from agent.events import AgentEventType
+from agent import Agent, AgentEventType
 from typing import Any
-from client.llm_client import LLMClient
+from client import LLMClient
 import asyncio
 import click
 
