@@ -30,8 +30,8 @@ class ContextManager:
             role='user',
             content=content,
             token_count=count_tokens(content, self._model_name),
-
         )
+        self._messages.append(item)
 
     def add_assistant_message(self, content: str) -> None:
         item = MessageItem(
@@ -39,7 +39,8 @@ class ContextManager:
             content=content or "",
             token_count=count_tokens(content, self._model_name)
         )
-    4
+        self._messages.append(item)
+    
     def get_messages(self) -> List[dict[str, Any]]:
         messages = []
 
