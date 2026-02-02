@@ -92,6 +92,44 @@ class StreamEvent:
             text_delta=delta
         )
 
+    @classmethod
+    def create_tool_call_start(
+        cls,
+        call_id: str,
+        name: str
+    ) -> StreamEvent:
+        return cls(
+            type=StreamEventType.TOOL_CALL_START,
+            tool_call_delta=ToolCallDelta(
+                call_id=call_id,
+                name=name
+            )
+        )
+    
+    @classmethod
+    def create_tool_call_delta(
+        cls,
+        call_id: str,
+        arguments: str
+    ) -> StreamEvent:
+        return cls(
+            type=StreamEventType.TOOL_CALL_DELTA,
+            tool_call_delta=ToolCallDelta(
+                call_id=call_id,
+                arguments_delta=arguments
+            )
+        )
+
+    @classmethod
+    def create_tool_call_complete(
+        cls,
+        tool_call: ToolCall
+    ) -> StreamEvent:
+        return cls(
+            type=StreamEventType.TOOL_CALL_COMPLETE,
+            tool_call=tool_call
+        )
+
 
 def parse_tool_call_arguments(arguments_str: str) -> dict[str, Any]:
     if not arguments_str:

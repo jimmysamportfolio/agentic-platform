@@ -141,30 +141,22 @@ class LLMClient:
                         if tool_call_delta.function:
                             if tool_call_delta.function.name:
                                 tool_calls[idx]['name'] = tool_call_delta.function.name
-                                yield StreamEvent(
-                                    type=StreamEventType.TOOL_CALL_START,
-                                    tool_call_delta=ToolCallDelta(
-                                        call_id=tool_calls[idx]['id'],
-                                        name=tool_call_delta.function.name,
-                                    )
+                                yield StreamEvent.create_tool_call_start(
+                                    call_id=tool_calls[idx]['id'],
+                                    name=tool_call_delta.function.name,
                                 )
 
                             if tool_call_delta.function.arguments:
                                 tool_calls[idx]['arguments'] += tool_call_delta.function.arguments
 
-                                yield StreamEvent(
-                                    type=StreamEventType.TOOL_CALL_DELTA,
-                                    tool_call_delta=ToolCallDelta(
-                                        call_id=tool_calls[idx]['id'],
-                                        name=tool_call_delta.function.name,
-                                        arguments_delta=tool_call_delta.function.arguments,
-                                    )
+                                yield StreamEvent.create_tool_call_delta(
+                                    call_id=tool_calls[idx]['id'],
+                                    arguments=tool_call_delta.function.arguments,
                                 )
                 
         for index, tool_call in tool_calls.items():
-            yield StreamEvent(
-                type=StreamEventType.TOOL_CALL_COMPLETE,
-                tool_call_delta=ToolCall(
+            yield StreamEvent.create_tool_call_complete(
+                tool_call=ToolCall(
                     call_id=tool_call['id'],
                     name=tool_call['name'],
                     arguments=parse_tool_call_arguments(tool_call['arguments'])
