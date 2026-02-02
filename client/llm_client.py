@@ -26,6 +26,7 @@ class LLMClient:
             await self._client.close()
             self._client = None
 
+    # proper formatting for openai client
     def _build_tools(self, tools: list[dict[str, Any]]):
         return [
             {
@@ -129,31 +130,9 @@ class LLMClient:
 
             if delta.tool_calls:
                 for tool_call_delta in delta.tool_calls:
-                    idx = tool_call_delta.index
-
-                    if idx not in tool_calls:
-                        tool_calls[idx] = {
-                            'id': tool_call_delta.id or "",
-                            'name': '',
-                            'arguments': ''
-                        }
-
-                        if tool_call_delta.function:
-                            if tool_call_delta.function.name:
-                                tool_calls[idx]['name'] = tool_call_delta.function.name
-                                yield StreamEvent.create_tool_call_start(
-                                    call_id=tool_calls[idx]['id'],
-                                    name=tool_call_delta.function.name,
-                                )
-
-                            if tool_call_delta.function.arguments:
-                                tool_calls[idx]['arguments'] += tool_call_delta.function.arguments
-
-                                yield StreamEvent.create_tool_call_delta(
-                                    call_id=tool_calls[idx]['id'],
-                                    arguments=tool_call_delta.function.arguments,
-                                )
-                
+                    async for event in self._handle_tool_call_delta(tool_calls, tool_call_delta):
+                        yield event
+    
         for index, tool_call in tool_calls.items():
             yield StreamEvent.create_tool_call_complete(
                 tool_call=ToolCall(
@@ -162,11 +141,9 @@ class LLMClient:
                     arguments=parse_tool_call_arguments(tool_call['arguments'])
                 )
             )
-
             
         yield StreamEvent.create_msg_complete(finish_reason, usage)
         
-
     async def _non_stream_response(
         self,
         client: AsyncOpenAI,
@@ -198,5 +175,35 @@ class LLMClient:
             )
 
         return StreamEvent.create_msg_complete(finish_reason, usage, content)
+
+    # helper for processing streamed tool calls 
+    async def _handle_tool_call_delta(
+        self,
+        tool_calls: dict[int, dict[str, Any]],
+        tool_call_delta: Any
+    ) -> AsyncGenerator[StreamEvent, None]:
+        idx = tool_call_delta.index
+        
+        if idx not in tool_calls:
+            tool_calls[idx] = {
+                'id': tool_call_delta.id or "",
+                'name': '',
+                'arguments': ''
+            }
+
+        if tool_call_delta.function:
+            if tool_call_delta.function.name:
+                tool_calls[idx]['name'] = tool_call_delta.function.name
+                yield StreamEvent.create_tool_call_start(
+                    call_id=tool_calls[idx]['id'],
+                    name=tool_call_delta.function.name,
+                )
+
+            if tool_call_delta.function.arguments:
+                tool_calls[idx]['arguments'] += tool_call_delta.function.arguments
+                yield StreamEvent.create_tool_call_delta(
+                    call_id=tool_calls[idx]['id'],
+                    arguments=tool_call_delta.function.arguments,
+                )
       
         
