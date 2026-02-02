@@ -20,25 +20,7 @@ def count_tokens(text: str, model: str) -> int:
 def estimate_tokens(text: str) -> int:
     return max(1, len(text) // 4)
 
-def truncate_text(
-    text: str,
-    model: str,
-    max_tokens: int,
-    suffix: str ="\n... [truncated]",
-    preserve_lines: bool = True
-) -> str:
-    current_tokens = count_tokens(text, model)
-    if current_tokens <= max_tokens:
-        return text
 
-    suffix_tokens = count_tokens(suffix, model)
-    target_tokens = max_tokens - suffix_tokens
-
-    if target_tokens <= 0:
-        return suffix.strip()
-
-    if preserve_lines:
-        return _truncate_by_lines(text, target)
 
 
 def truncate_text(
@@ -62,6 +44,22 @@ def truncate_text(
         return _truncate_by_lines(text, target_tokens, suffix, model)
     else:
         return _truncate_by_chars(text, target_tokens, suffix, model)
+
+
+
+def _truncate_by_lines(text: str, target_tokens: int, suffix: str, model: str) -> str:
+    lines = text.splitlines(keepends=True)
+    low, high = 0, len(lines)
+
+    while low < high:
+        mid = (low + high + 1) // 2
+        content = "".join(lines[:mid])
+        if count_tokens(content, model) <= target_tokens:
+            low = mid
+        else:
+            high = mid - 1
+            
+    return "".join(lines[:low]) + suffix
 
 
 def _truncate_by_chars(text: str, target_tokens: int, suffix: str, model: str) -> str:

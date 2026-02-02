@@ -1,6 +1,6 @@
+from __future__ import annotations
 from pydantic.json_schema import model_json_schema
 from pathlib import Path
-from __future__ import annotations
 from typing import Any
 from abc import ABC, abstractmethod
 from pydantic import BaseModel, ValidationError
@@ -27,12 +27,14 @@ class ToolResult:
     def error_result(
         cls,
         error: str,
-        output: str = ""
+        output: str = "",
+        **kwargs: Any,
     ):
         return cls(
             success=False,
             output=output,
             error=error,
+            **kwargs
         )
 
     @classmethod
