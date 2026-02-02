@@ -9,5 +9,7 @@ class Config:
     DEFAULT_AI_MODEL = os.getenv("DEFAULT_AI_MODEL")
     
     MAX_RETRIES = 3
+    MAX_FILE_SIZE = 1024*1024*10
+    MAX_OUTPUT_TOKENS = 25000
 
 config = Config()
