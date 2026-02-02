@@ -63,7 +63,7 @@ class ReadFileTool(Tool):
                 f"Cannot read binary file: {path.name} ({size_str})"
                 f"This tool only reads text files."
             )
-            try:
+        try:
             try: 
                 content = path.read_text(encoding="utf-8")
             except UnicodeDecodeError:

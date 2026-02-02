@@ -22,14 +22,16 @@ class MessageItem:
 class ContextManager:
     def __init__(self) -> None:
         self._system_prompt = get_system_prompt()
-        self._model_name=config.DEFAULT_AI_MODEL
+        self._model_name=config.DEFAULT_GEMINI_MODEL
         self._messages: List[MessageItem] = []
 
     def add_user_message(self, content: str) -> None:
         item = MessageItem(
             role='user',
             content=content,
-            token_count=count_tokens(content, self._model_name),
+            token_count=count_tokens(
+                content,
+                self._model_name),
         )
         self._messages.append(item)
 
@@ -37,7 +39,9 @@ class ContextManager:
         item = MessageItem(
             role='assistant',
             content=content or "",
-            token_count=count_tokens(content, self._model_name)
+            token_count=count_tokens(
+                content or "",
+                self._model_name)
         )
         self._messages.append(item)
 
