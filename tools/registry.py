@@ -45,8 +45,8 @@ class ToolRegistry:
         self,
         name: str,
         params: dict[str, Any],
-        cwd: Path | None
-    ):
+        cwd: Path,
+    ) -> ToolResult:
         tool = self.get(name)
         if tool is None:
             return ToolResult.error_result(

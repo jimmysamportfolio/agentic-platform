@@ -20,9 +20,6 @@ def count_tokens(text: str, model: str) -> int:
 def estimate_tokens(text: str) -> int:
     return max(1, len(text) // 4)
 
-
-
-
 def truncate_text(
     text: str,
     model: str,
