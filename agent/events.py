@@ -93,7 +93,7 @@ class AgentEvent:
     def tool_call_start(
         cls,
         call_id: str,
-        name:str,
+        name: str,
         arguments: dict[str, Any]
     ): 
         return cls(

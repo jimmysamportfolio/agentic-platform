@@ -1,9 +1,11 @@
 import os
+from pathlib import Path
 from dotenv import load_dotenv
 
 load_dotenv()
 
 class Config:
+    cwd = Path.cwd()
     BASE_URL = os.getenv("BASE_URL")
     OPENROUTER_API_KEY = os.getenv("OPENROUTER_API_KEY")
     GEMINI_API_KEY = os.getenv("GEMINI_API_KEY")

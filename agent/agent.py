@@ -12,7 +12,7 @@ class Agent:
     def __init__(self):
         self.client = LLMClient()
         self._context_manager = ContextManager()
-        self._tool_registry = create_default_registry()
+        self.tool_registry = create_default_registry()
 
     async def run(self, message: str):
         yield AgentEvent.agent_start(message)
@@ -32,7 +32,7 @@ class Agent:
     async def _agentic_loop(self) -> AsyncGenerator[AgentEvent, None]:
         response_text = ""
 
-        tool_schemas = self._tool_registry.get_schemas()
+        tool_schemas = self.tool_registry.get_schemas()
         tool_calls: list[ToolCall] = []
         
         async for event in self.client.chat_completion(
@@ -48,7 +48,6 @@ class Agent:
             elif event.type == StreamEventType.TOOL_CALL_COMPLETE:
                 if event.tool_call:
                     tool_calls.append(event.tool_call)
-            
             elif event.type == StreamEventType.ERROR:
                 yield AgentEvent.agent_error(event.error or "Unknown error occured")
                 
@@ -57,6 +56,7 @@ class Agent:
         )   
         if response_text:
             yield AgentEvent.text_complete(response_text)
+            
         tool_call_results: list[ToolResultMessage] = []
         
         for tool_call in tool_calls:
@@ -66,7 +66,7 @@ class Agent:
                 tool_call.arguments,
             )
 
-            result = await self._tool_registry.invoke(
+            result = await self.tool_registry.invoke(
                 tool_call.name,
                 tool_call.arguments,
                 Path.cwd(),
